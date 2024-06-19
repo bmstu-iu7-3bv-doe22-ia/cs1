@@ -1,0 +1,66 @@
+using System;
+
+class TypingSpeedTest
+{
+    static string[] texts = {
+        "Эталонный текст для проверки скорости печати.",
+        "Второй вариант текста для измерения скорости печати.",
+        "Третий текст для проверки вашей скорости печати."
+    };
+
+    static void Main()
+    {
+        Random random = new Random();
+
+        while (true)
+        {
+            Console.WriteLine("Нажмите Enter, чтобы начать печатать...");
+            Console.ReadLine();
+            DateTime startedAt = DateTime.Now;
+
+            int index = random.Next(texts.Length);
+            string text = texts[index];
+            Console.WriteLine(text);
+            string input = Console.ReadLine();
+
+            int errors = CalculateErrors(text, input);
+            int typedCharacters = input.Length;
+            int correctCharacters = typedCharacters - errors;
+
+            TimeSpan span = DateTime.Now - startedAt;
+            double minutes = span.TotalMinutes;
+            double charactersPerMinute = correctCharacters / minutes;
+
+            Console.WriteLine($"Скорость печати: {charactersPerMinute:0.##} символов в минуту.");
+            Console.WriteLine($"Количество ошибок: {errors}");
+            Console.WriteLine("Хотите попробовать ещё раз? (Да/Нет)");
+            string choice = Console.ReadLine().ToLower();
+            if (choice != "да")
+                break;
+        }
+    }
+
+static int CalculateErrors(string original, string typed)
+{
+    int n = original.Length;
+    int m = typed.Length;
+    int[,] dp = new int[n + 1, m + 1];
+
+    for (int i = 0; i <= n; i++)
+        dp[i, 0] = i;
+    for (int j = 0; j <= m; j++)
+        dp[0, j] = j;
+
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            int cost = (original[i - 1] == typed[j - 1]) ? 0 : 1;
+            dp[i, j] = Math.Min(Math.Min(dp[i - 1, j] + 1, dp[i, j - 1] + 1), dp[i - 1, j - 1] + cost);
+        }
+    }
+
+    return dp[n, m];
+}
+
+}
