@@ -1,0 +1,152 @@
+using System;
+using System.Collections.Generic;
+
+class TypingSpeedTest
+{
+    // Перечисление для языка текста
+    enum Language { English, Russian }
+
+    // Словарь текстов для каждого языка
+    static Dictionary<Language, string[]> texts = new Dictionary<Language, string[]>()
+    {
+        // Тексты на английском языке
+        { Language.English, new string[] {
+            "Sample text for typing speed test.",
+            "Another variant of text to measure typing speed.",
+            "Third text for checking your typing speed."
+        }},
+        // Тексты на русском языке
+        { Language.Russian, new string[] {
+            "Эталонный текст для проверки скорости печати.",
+            "Второй вариант текста для измерения скорости печати.",
+            "Третий текст для проверки вашей скорости печати."
+        }}
+    };
+
+    // Класс для хранения результатов
+    class Result
+    {
+        public double Speed { get; set; } // Скорость печати
+        public int Errors { get; set; }   // Количество ошибок
+    }
+
+    // Словарь результатов для каждого языка
+    static Dictionary<Language, List<Result>> results = new Dictionary<Language, List<Result>>();
+
+    static void Main()
+    {
+        Random random = new Random();
+        Language selectedLanguage = SelectLanguage();
+
+        while (true)
+        {
+            Console.WriteLine("Нажмите Enter, чтобы начать печатать...");
+            Console.ReadLine();
+            DateTime startedAt = DateTime.Now;
+
+            // Выбор случайного текста из списка
+            int index = random.Next(texts[selectedLanguage].Length);
+            string text = texts[selectedLanguage][index];
+            Console.WriteLine(text);
+            string input = Console.ReadLine();
+
+            // Вычисление ошибок и скорости печати
+            int errors = CalculateErrors(text, input);
+            int typedCharacters = input.Length;
+            int correctCharacters = typedCharacters - errors;
+
+            TimeSpan span = DateTime.Now - startedAt;
+            double minutes = span.TotalMinutes;
+            double charactersPerMinute = correctCharacters / minutes;
+
+            Console.WriteLine($"Скорость печати: {charactersPerMinute:0.##} символов в минуту.");
+            Console.WriteLine($"Количество ошибок: {errors}");
+            SaveResult(selectedLanguage, charactersPerMinute, errors);
+
+            ShowStatistics(selectedLanguage);
+
+            Console.WriteLine("Хотите попробовать ещё раз? (Да/Нет)");
+            string choice = Console.ReadLine().ToLower();
+            if (choice != "да")
+                break;
+        }
+    }
+
+    // Метод для выбора языка
+    static Language SelectLanguage()
+    {
+        Console.WriteLine("Выберите язык (English/Russian):");
+        string choice = Console.ReadLine().ToLower();
+        if (choice == "english")
+            return Language.English;
+        else
+            return Language.Russian;
+    }
+
+    // Метод для сохранения результатов
+    static void SaveResult(Language language, double speed, int errors)
+    {
+        if (!results.ContainsKey(language))
+            results[language] = new List<Result>();
+
+        results[language].Add(new Result { Speed = speed, Errors = errors });
+    }
+
+    // Метод для вывода статистики
+    static void ShowStatistics(Language language)
+{
+    if (!results.ContainsKey(language))
+    {
+        Console.WriteLine("У вас пока нет результатов.");
+        return;
+    }
+
+    List<Result> languageResults = results[language];
+
+    double totalSpeed = 0;
+    int totalErrors = 0;
+    double maxSpeed = double.MinValue;  // Для хранения максимальной скорости
+    double minSpeed = double.MaxValue;  // Для хранения минимальной скорости
+
+    foreach (var result in languageResults)
+    {
+        totalSpeed += result.Speed;
+        totalErrors += result.Errors;
+        if (result.Speed > maxSpeed)
+            maxSpeed = result.Speed;
+        if (result.Speed < minSpeed)
+            minSpeed = result.Speed;
+    }
+
+    double averageSpeed = totalSpeed / languageResults.Count;
+
+    Console.WriteLine($"У вас было {languageResults.Count} попыток, средняя скорость - {averageSpeed:0.##} зн/мин, " +
+        $"среднее количество ошибок - {totalErrors / languageResults.Count}, " +
+        $"лучшая скорость - {maxSpeed:0.##} зн/мин, худшая скорость - {minSpeed:0.##} зн/мин");
+}
+
+    // Метод для вычисления ошибок при печати
+    static int CalculateErrors(string original, string typed)
+    {
+        int n = original.Length;
+        int m = typed.Length;
+        int[,] dp = new int[n + 1, m + 1];
+
+        for (int i = 0; i <= n; i++)
+            dp[i, 0] = i;
+        for (int j = 0; j <= m; j++)
+            dp[0, j] = j;
+
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = 1; j <= m; j++)
+            {
+                int cost = (original[i - 1] == typed[j - 1]) ? 0 : 1;
+                dp[i, j] = Math.Min(Math.Min(dp[i - 1, j] + 1, dp[i, j - 1] + 1), dp[i - 1, j - 1] + cost);
+            }
+        }
+
+        return dp[n, m];
+    }
+
+}
