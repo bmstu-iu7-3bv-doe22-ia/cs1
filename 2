@@ -1,0 +1,38 @@
+using System;
+
+class TypingSpeedTest
+{
+    static string[] texts = {
+        "Эталонный текст для проверки скорости печати.",
+        "Второй вариант текста для измерения скорости печати.",
+        "Третий текст для проверки вашей скорости печати."
+    };
+
+    static void Main()
+    {
+        Random random = new Random();
+
+        while (true)
+        {
+            Console.WriteLine("Нажмите Enter, чтобы начать печатать...");
+            Console.ReadLine();
+            DateTime startedAt = DateTime.Now;
+
+            int index = random.Next(texts.Length);
+            string text = texts[index];
+            Console.WriteLine(text);
+            string input = Console.ReadLine();
+
+            TimeSpan span = DateTime.Now - startedAt;
+            double minutes = span.TotalMinutes;
+            int typedCharacters = input.Length;
+            double charactersPerMinute = typedCharacters / minutes;
+
+            Console.WriteLine($"Скорость печати: {charactersPerMinute:0.##} символов в минуту.");
+            Console.WriteLine("Хотите попробовать ещё раз? (Да/Нет)");
+            string choice = Console.ReadLine().ToLower();
+            if (choice != "да")
+                break;
+        }
+    }
+}
